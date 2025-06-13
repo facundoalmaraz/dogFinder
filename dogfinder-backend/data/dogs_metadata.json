@@ -1,0 +1,30 @@
+[
+    {
+      "id": 1,
+      "name": "Luna",
+      "size": "pequeño",
+      "color": "blanco",
+      "age": 4,
+      "zone": "norte",
+      "hasCollar": true
+    },
+    {
+      "id": 2,
+      "name": "Rocky",
+      "size": "mediano",
+      "color": "marrón",
+      "age": 3,
+      "zone": "sur",
+      "hasCollar": false
+    },
+    {
+      "id": 3,
+      "name": "Toby",
+      "size": "grande",
+      "color": "negro",
+      "age": 5,
+      "zone": "centro",
+      "hasCollar": true
+    }
+  ]
+  
