@@ -2,51 +2,62 @@ import json
 from typing import List, Dict, Any
 
 Dog = Dict[str, Any]
+def load_dog_metadata(db_path: str = "dogs.db"):
+    import sqlite3
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, name, size, color, age, zone, hasCollar FROM dogs")
+    rows = cursor.fetchall()
+    conn.close()
 
-def load_dog_metadata(path: str = "data/dogs_metadata.json") -> List[Dog]:
-    with open(path, "r", encoding="utf-8") as f:
-        return json.load(f)
+    keys = ["id", "name", "size", "color", "age", "zone", "hasCollar"]
+    return [dict(zip(keys, row)) for row in rows]
 
-def run_fuzzy_algorithm(dogs: List[Dog], criteria: Dict[str, Any]) -> List[Dict[str, Any]]:
+
+def run_fuzzy_algorithm(dogs: List[Dog], criteria: Dict[str, Any], limit: int = 3):
+    """
+    Aplica lógica difusa para comparar características del formulario contra cada perro.
+    Retorna los 'limit' mejores resultados con explicación y puntaje.
+    """
     results = []
+
     for dog in dogs:
-        score = 0
+        score = 0.0
         explanation = []
 
-        # Tamaño
-        if criteria["size"] == dog["size"]:
-            score += 0.3
-            explanation.append(f"tamaño {dog['size']}")
+        # Comparar tamaño
+        if dog.get("size") == criteria.get("size"):
+            score += 0.25
+            explanation.append("✔️ Tamaño coincide")
 
-        # Color
-        if criteria["color"] == dog["color"]:
-            score += 0.2
-            explanation.append(f"color {dog['color']}")
+        # Comparar edad ± 2 años
+        try:
+            if abs(int(dog.get("age", 0)) - int(criteria.get("age", 0))) <= 2:
+                score += 0.20
+                explanation.append("✔️ Edad similar")
+        except:
+            explanation.append("⚠️ Edad inválida")
 
-        # Edad (más cerca = mejor)
-        age_diff = abs(int(criteria["age"]) - int(dog["age"]))
-        if age_diff == 0:
-            score += 0.2
-            explanation.append("edad exacta")
-        elif age_diff <= 2:
-            score += 0.1
-            explanation.append("edad cercana")
+        # Comparar zona
+        if dog.get("zone") == criteria.get("zone"):
+            score += 0.20
+            explanation.append("✔️ Zona exacta")
 
-        # Zona
-        if criteria["zone"].lower() == dog["zone"].lower():
-            score += 0.2
-            explanation.append(f"zona {dog['zone']}")
+        # Comparar color
+        if dog.get("color") == criteria.get("color"):
+            score += 0.20
+            explanation.append("✔️ Color coincide")
 
-        # Collar
-        if bool(criteria["hasCollar"]) == bool(dog["hasCollar"]):
-            score += 0.1
-            explanation.append("coincide collar")
+        # Comparar collar
+        if dog.get("hasCollar") == criteria.get("hasCollar"):
+            score += 0.15
+            explanation.append("✔️ Collar coincide")
 
         results.append({
             "dog": dog,
-            "probability": round(score, 3),
-            "explanation": ", ".join(explanation)
+            "probability": round(score, 4),
+            "explanation": ", ".join(explanation) or "❌ Sin coincidencias fuzzy"
         })
 
     results.sort(key=lambda x: x["probability"], reverse=True)
-    return results
+    return results[:limit]

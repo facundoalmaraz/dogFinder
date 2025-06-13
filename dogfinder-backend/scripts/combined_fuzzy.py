@@ -3,36 +3,53 @@ from scripts.cnn_compare import compare_image_to_embeddings
 from scripts.fuzzy_logic import run_fuzzy_algorithm, load_dog_metadata
 
 def process_image_and_criteria(image_path, size, age, zone, color, has_collar):
-    # Buscar las 5 imágenes más parecidas
+    # Paso 1: Comparación visual (CNN)
     top_matches = compare_image_to_embeddings(image_path)
-    top1 = top_matches[0]  # el más similar visualmente
+    top_ids = [match["id"] for match in top_matches]
 
-    # Cargar metadatos simulados (BD con descripción de perros)
+    # Paso 2: Cargar metadatos de perros
     dogs = load_dog_metadata()
+    filtered_dogs = [d for d in dogs if d["id"] in top_ids]
 
-    # Ejecutar lógica fuzzy sobre los datos ingresados
+    # DEBUG opcional
+    print(f"🐾 Criterios recibidos: {size}, {age}, {zone}, {color}, {has_collar}")
+    print(f"🔎 Filtrando lógica fuzzy sobre {len(filtered_dogs)} perros")
+
+    # Paso 3: Ejecutar lógica fuzzy sobre los top visuales
     fuzzy_results = run_fuzzy_algorithm(
-        dogs,
+        filtered_dogs,
         {
             "size": size,
-            "age": age,
+            "age": int(age),
             "zone": zone,
             "color": color,
             "hasCollar": has_collar,
         }
     )
 
-    # Obtener mejor resultado fuzzy (mayor probabilidad)
-    best_match = fuzzy_results[0]
+    # Paso 4: Unir visual + fuzzy por ID
+    final_results = []
+    for match in top_matches:
+        fuzzy_match = next((f for f in fuzzy_results if f["dog"]["id"] == match["id"]), None)
+        score_fuzzy = fuzzy_match["probability"] if fuzzy_match else 0.0
+        explanation = fuzzy_match["explanation"] if fuzzy_match else "Sin explicación fuzzy"
 
-    # Crear respuesta combinada
-    response = {
-        "cnn_class_id": top1["id"],
-        "cnn_similarity": float(top1["similarity"]),
-        "fuzzy_match_id": int(best_match["dog"]["id"]),
-        "fuzzy_probability": float(best_match["probability"]),
-        "fuzzy_explanation": str(best_match["explanation"]),
-        "top_matches": top_matches  # ← incluye path, similarity e id de los 5 más parecidos
+        score_total = 0.7 * match["similarity"] + 0.3 * score_fuzzy
+
+        final_results.append({
+            "id": match["id"],
+            "cnn_similarity": float(match["similarity"]),
+            "fuzzy_probability": float(score_fuzzy),
+            "score_total": float(score_total),
+            "path": match["path"],
+            "class": match["class"],
+            "fuzzy_explanation": explanation
+        })
+
+    # Paso 5: Ordenar por score combinado
+    final_results.sort(key=lambda x: x["score_total"], reverse=True)
+
+    return {
+        "cnn_class_id": top_matches[0]["id"],
+        "top_matches": final_results
     }
-
-    return response

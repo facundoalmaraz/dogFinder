@@ -15,7 +15,13 @@ def get_embedding_model():
     model.fc = torch.nn.Linear(model.fc.in_features, NUM_CLASSES)
     model.load_state_dict(torch.load(MODEL_PATH, map_location=torch.device('cpu')))
     model.eval()
+
+    # ✅ Mostrar la capa final para confirmar el fine-tuning
+    print("🔎 Capa final del modelo:")
+    print(model.fc)
+
     return torch.nn.Sequential(*list(model.children())[:-1])
+
 
 def extract_embedding(image_path, model):
     transform = transforms.Compose([
@@ -40,16 +46,47 @@ def compare_image_to_embeddings(image_path):
     for file in os.listdir(EMBEDDINGS_DIR):
         if not file.endswith(".npy"):
             continue
+
+        data = np.load(os.path.join(EMBEDDINGS_DIR, file), allow_pickle=True).item()
+        stored_embedding = data["embedding"].reshape(1, -1)
+        sim = cosine_similarity(query_embedding, stored_embedding)[0][0]
+
+        filename = os.path.splitext(file)[0]
+        parts = filename.split("_")
+        id_auto = f"{parts[-2]}_{parts[-1]}" if len(parts) >= 2 else filename
+
+        match = {
+            "id": data.get("id", id_auto),
+            "similarity": float(sim),
+            "path": data.get("path", "dataset/default.jpg"),
+            "class": data.get("class", "Desconocida")
+        }
+
+        print(f"🧪 ID del archivo {file}: {match['id']}")
+        matches.append(match)
+
+    matches.sort(key=lambda x: x["similarity"], reverse=True)
+    return matches[:5]
+
+    model = get_embedding_model()
+    query_embedding = extract_embedding(image_path, model).reshape(1, -1)
+
+    matches = []
+
+    for file in os.listdir(EMBEDDINGS_DIR):
+        if not file.endswith(".npy"):
+            continue
         data = np.load(os.path.join(EMBEDDINGS_DIR, file), allow_pickle=True).item()
         stored_embedding = data["embedding"].reshape(1, -1)
         sim = cosine_similarity(query_embedding, stored_embedding)[0][0]
 
         matches.append({
-            "id": data.get("id", file.split("_")[1].split(".")[0]),
-            "similarity": float(sim),
-            "path": data.get("path", "dataset/default.jpg"),
-            "class": data.get("class", "Desconocida")
-        })
+        "id": data.get("id", file.split("_")[-1].replace(".npy", "")),  # <- debe coincidir con el json
+        "similarity": float(sim),
+        "path": data.get("path", "dataset/default.jpg"),
+        "class": data.get("class", "Desconocida")
+    })
 
+    print(f"🧪 ID del archivo {file}: {data['id']}")
     matches.sort(key=lambda x: x["similarity"], reverse=True)
     return matches[:5]

@@ -10,7 +10,7 @@ app = FastAPI()
 # CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=["http://localhost:3000", "https://3xdwdjjr-3000.brs.devtunnels.ms"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -40,3 +40,28 @@ async def compare(
         path, size, age, zone, color, hasCollar
     )
     return result
+
+
+from scripts.auto_traits import infer_traits_from_class, extract_dominant_color
+from scripts.cnn_compare import compare_image_to_embeddings
+
+@app.post("/auto-analyze")
+async def auto_analyze(image: UploadFile = File(...)):
+    path = os.path.join(UPLOAD_FOLDER, image.filename)
+    with open(path, "wb") as f:
+        shutil.copyfileobj(image.file, f)
+
+    top_matches = compare_image_to_embeddings(path)
+    top1 = top_matches[0]
+
+    traits = infer_traits_from_class(top1["id"])
+    color = extract_dominant_color(path)
+
+    return {
+        "cnn_class_id": top1["id"],
+        "class_name": top1["class"],
+        "size": traits["size"],
+        "age": traits["age"],
+        "color": color,
+        "hasCollar": False  # se puede mejorar con visión
+    }

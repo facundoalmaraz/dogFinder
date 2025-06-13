@@ -40,14 +40,40 @@ export default function HomePage() {
     }));
   };
 
-  const handleImage = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       setIsUploading(true);
       setImage(file);
       const objectUrl = URL.createObjectURL(file);
       setPreview(objectUrl);
-      setTimeout(() => setIsUploading(false), 800); // Simular carga
+
+      // 🧠 Llamada al backend para auto-análisis
+      const autoForm = new FormData();
+      autoForm.append("image", file);
+
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/auto-analyze`,
+          {
+            method: "POST",
+            body: autoForm,
+          }
+        );
+        const data = await res.json();
+
+        setFormData((prev) => ({
+          ...prev,
+          size: data.size || "",
+          age: data.age || "",
+          color: data.color || "",
+          hasCollar: data.hasCollar || false,
+        }));
+      } catch (err) {
+        console.error("Error al autocompletar:", err);
+      }
+
+      setTimeout(() => setIsUploading(false), 800);
     }
   };
 
@@ -62,13 +88,23 @@ export default function HomePage() {
     });
 
     try {
-      const res = await fetch("http://localhost:8000/compare", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/compare`, {
         method: "POST",
         body,
       });
 
       const data = await res.json();
 
+      // 🟨 Si hay traits sugeridos, los usamos
+      if (data.traits) {
+        setFormData((prev) => ({
+          ...prev,
+          size: data.traits.size || "",
+          age: data.traits.age?.toString() || "",
+        }));
+      }
+
+      // Guardar resultados para la página de resultado
       localStorage.setItem("dogfinder_result", JSON.stringify(data));
       localStorage.setItem("dogfinder_image", URL.createObjectURL(image));
 
@@ -224,7 +260,7 @@ export default function HomePage() {
                       value={formData.size}
                       onChange={handleChange}
                       required
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent text-black"
                     >
                       <option value="">Seleccionar...</option>
                       <option value="pequeño">Pequeño</option>
@@ -246,7 +282,7 @@ export default function HomePage() {
                       value={formData.age}
                       onChange={handleChange}
                       required
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent text-black"
                     />
                   </div>
 
@@ -263,7 +299,7 @@ export default function HomePage() {
                       onChange={handleChange}
                       required
                       placeholder="Ej: Parque Central, Avenida Principal"
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent text-black"
                     />
                   </div>
 
@@ -280,7 +316,7 @@ export default function HomePage() {
                       onChange={handleChange}
                       required
                       placeholder="Ej: Marrón, Negro con manchas blancas"
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent text-black"
                     />
                   </div>
                 </div>

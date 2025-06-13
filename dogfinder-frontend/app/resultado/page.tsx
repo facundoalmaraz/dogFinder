@@ -37,7 +37,10 @@ export default function ResultadoPage() {
             (match: any, index: number) => ({
               id: index + 1,
               filename: match.path.replace(/\n/g, ""),
-              similarity: match.similarity,
+              similarity: match.score_total, // ← usamos el puntaje combinado visual + fuzzy
+              cnn_similarity: match.cnn_similarity,
+              fuzzy_probability: match.fuzzy_probability,
+              fuzzy_explanation: match.fuzzy_explanation,
               location: "Ubicación desconocida",
               contact: "Sin datos",
               date: "Fecha no disponible",
@@ -136,7 +139,7 @@ export default function ResultadoPage() {
                       <div className="md:w-1/4 bg-gray-100 p-4 flex items-center justify-center">
                         <div className="relative h-32 w-32 rounded overflow-hidden bg-gray-200">
                           <Image
-                            src={`http://localhost:8000/${result.filename}`}
+                            src={`${process.env.NEXT_PUBLIC_BACKEND_URL}/${result.filename}`}
                             alt={`Imagen ${result.id}`}
                             fill
                             className="object-cover"

@@ -56,7 +56,10 @@ for class_folder in os.listdir(IMAGE_DIR):
             embedding = get_embedding(file_path)
             output_name = f"{class_folder}_{filename.split('.')[0]}.npy"
             output_path = os.path.join(EMBEDDING_DIR, output_name)
+            image_id = filename.split(".")[0]  # Ej: "n02085620_242" o "123"
+
             np.save(output_path, {
+                "id": image_id,                     # ✅ este campo es clave para fuzzy
                 "embedding": embedding,
                 "path": file_path,
                 "class": class_folder
