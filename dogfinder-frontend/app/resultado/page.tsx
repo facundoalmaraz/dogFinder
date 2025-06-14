@@ -37,7 +37,7 @@ export default function ResultadoPage() {
             (match: any, index: number) => ({
               id: index + 1,
               filename: match.path.replace(/\n/g, ""),
-              similarity: match.score_total, // ← usamos el puntaje combinado visual + fuzzy
+              similarity: match.score_total,
               cnn_similarity: match.cnn_similarity,
               fuzzy_probability: match.fuzzy_probability,
               fuzzy_explanation: match.fuzzy_explanation,
@@ -100,7 +100,7 @@ export default function ResultadoPage() {
                         width={192}
                         height={192}
                         className="object-cover rounded-lg"
-                        unoptimized // necesario si usás blobs (URL.createObjectURL)
+                        unoptimized
                       />
                     </div>
                   </div>

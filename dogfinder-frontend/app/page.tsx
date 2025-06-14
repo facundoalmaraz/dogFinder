@@ -48,7 +48,6 @@ export default function HomePage() {
       const objectUrl = URL.createObjectURL(file);
       setPreview(objectUrl);
 
-      // 🧠 Llamada al backend para auto-análisis
       const autoForm = new FormData();
       autoForm.append("image", file);
 
@@ -95,7 +94,6 @@ export default function HomePage() {
 
       const data = await res.json();
 
-      // 🟨 Si hay traits sugeridos, los usamos
       if (data.traits) {
         setFormData((prev) => ({
           ...prev,
@@ -104,7 +102,6 @@ export default function HomePage() {
         }));
       }
 
-      // Guardar resultados para la página de resultado
       localStorage.setItem("dogfinder_result", JSON.stringify(data));
       localStorage.setItem("dogfinder_image", URL.createObjectURL(image));
 
@@ -249,7 +246,6 @@ export default function HomePage() {
                 </div>
 
                 <div className="grid md:grid-cols-2 gap-6">
-                  {/* Tamaño */}
                   <div>
                     <label className="flex items-center text-sm font-medium text-gray-700 mb-1">
                       <Tag size={16} className="mr-2 text-amber-500" />
