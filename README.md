@@ -28,7 +28,6 @@ dogfinder-backend/
 │   └── metadata_generator.py   # Crear metadata desde embeddings  
 ├── embeddings_custom/       # Archivos .npy con embeddings de imágenes  
 ├── dataset/Images/          # Dataset de imágenes (por clase)  
-├── new_samples/             # Nuevas imágenes subidas por usuarios  
 ├── dogs_metadata.json       # Metadata de perros (alternativa a SQLite)  
 ├── dogs.db                  # Base de datos SQLite con metadatos  
 ```
