@@ -22,7 +22,7 @@ def generate_metadata():
             id_full = f"{parts[-2]}_{parts[-1]}"
             id_part = parts[-1]
         except Exception as e:
-            print(f"[❌] Error al procesar {file}: {e}")
+            print(f"[ERROR] Error al procesar {file}: {e}")
             continue
 
         dog = {
@@ -40,7 +40,7 @@ def generate_metadata():
     with open(OUTPUT_JSON, "w", encoding="utf-8") as f:
         json.dump(dogs, f, indent=2, ensure_ascii=False)
 
-    print(f"✅ Archivo generado con {len(dogs)} perros → {OUTPUT_JSON}")
+    print(f"Archivo generado con {len(dogs)} perros → {OUTPUT_JSON}")
 
 if __name__ == "__main__":
     generate_metadata()

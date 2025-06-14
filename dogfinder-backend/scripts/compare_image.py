@@ -37,10 +37,10 @@ def get_embedding(image_path):
         embedding = embedding_model(tensor).squeeze().numpy()
     return embedding
 
-# --- Obtener embedding de la imagen nueva ---
+
 query_embedding = get_embedding(IMAGE_PATH).reshape(1, -1)
 
-# --- Comparar con embeddings del dataset ---
+
 results = []
 
 for file in os.listdir(EMBEDDINGS_DIR):
@@ -50,15 +50,14 @@ for file in os.listdir(EMBEDDINGS_DIR):
         sim = cosine_similarity(query_embedding, stored_embedding)[0][0]
         results.append((sim, data["path"]))
 
-# --- Mostrar resultados más similares ---
-results.sort(reverse=True)  # mayor similitud primero
+
 top_results = results[:NUM_RESULTS]
 
 print("\n🐶 Imágenes más parecidas:\n")
 for i, (sim, path) in enumerate(top_results):
     print(f"{i+1}. {path} — Similitud: {sim:.4f}")
 
-# --- Mostrar visualmente ---
+
 fig, axs = plt.subplots(1, NUM_RESULTS, figsize=(15, 5))
 for i, (_, path) in enumerate(top_results):
     img = Image.open(path)

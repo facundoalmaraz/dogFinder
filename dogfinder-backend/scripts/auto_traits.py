@@ -4,7 +4,6 @@ def infer_traits_from_class(cnn_class_id):
     with open("scripts/class_traits.json") as f:
         traits = json.load(f)
 
-    # Buscar en la lista el objeto con cnn_class_id que coincida
     for item in traits:
         if str(item.get("cnn_id")) == str(cnn_class_id):
             return {
@@ -14,7 +13,6 @@ def infer_traits_from_class(cnn_class_id):
                 "hasCollar": item.get("hasCollar", False),
             }
 
-    # Si no encuentra nada
     return {
         "size": "desconocido",
         "age": 0,
